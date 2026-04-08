@@ -22,38 +22,24 @@ pip install -r requirements.txt
 
 ## 3. (Optional) Configure Google Cloud credentials
 
-If you want the trained model uploaded to GCS, set:
+If you want the trained model uploaded to GCS, you need a service account key file. If this is not set, training still runs and the model remains local.
+
+### Create a service account key in GCP
+
+1. Go to the [Google Cloud Console](https://console.cloud.google.com/) and select your project.
+2. Navigate to **IAM & Admin > Service Accounts**.
+3. Click **Create Service Account**, give it a name, and click **Done**.
+4. Click the service account you just created, go to the **Keys** tab, and click **Add Key > Create new key**.
+5. Choose **JSON** and click **Create** — the key file downloads automatically.
+6. Grant the service account the **Storage Object Admin** role (or a more restrictive role scoped to your bucket) via **IAM & Admin > IAM**.
+
+### Set the environment variable
+
+Point `GOOGLE_CLOUD_CREDENTIALS` at the downloaded key file:
 
 ```bash
-export GOOGLE_APPLICATION_CREDENTIALS="/absolute/path/to/service-account.json"
+export GOOGLE_CLOUD_CREDENTIALS="/absolute/path/to/service-account.json"
 ```
-
-If this is not set correctly, training still runs and the model remains local.
-
-### Pass credentials at runtime (no key file in container)
-
-You can pass service-account JSON directly in environment variables so the script never needs a credentials file path.
-
-Option A (recommended): base64-encoded JSON
-
-```bash
-export GOOGLE_APPLICATION_CREDENTIALS_JSON_B64="$(base64 -w 0 ~/path/on/laptop/service-account.json)"
-python train.py
-unset GOOGLE_APPLICATION_CREDENTIALS_JSON_B64
-```
-
-Option B: raw JSON string
-
-```bash
-export GOOGLE_APPLICATION_CREDENTIALS_JSON="$(cat ~/path/on/laptop/service-account.json)"
-python train.py
-unset GOOGLE_APPLICATION_CREDENTIALS_JSON
-```
-
-The script checks auth in this order:
-1. `GOOGLE_APPLICATION_CREDENTIALS_JSON_B64`
-2. `GOOGLE_APPLICATION_CREDENTIALS_JSON`
-3. `GOOGLE_APPLICATION_CREDENTIALS` (file path)
 
 ## 4. Train
 
