@@ -61,7 +61,17 @@ The script checks auth in this order:
 python train.py
 ```
 
-## 5. Deactivate when done
+## 5. Run the live demo
+
+Start a local HTTP server from the project root:
+
+```bash
+python -m http.server 8080
+```
+
+Then open [index.html](http://localhost:8080/index.html) in your browser to interact with the trained model via the live demo page.
+
+## 6. Deactivate when done
 
 ```bash
 deactivate
