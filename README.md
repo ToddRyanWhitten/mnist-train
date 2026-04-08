@@ -49,6 +49,10 @@ python train.py
 
 ## 5. Run the live demo
 
+https://toddryanwhitten.github.io/mnist-train/
+
+OR
+
 Start a local HTTP server from the project root:
 
 ```bash
