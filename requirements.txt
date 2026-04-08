@@ -1,3 +1,4 @@
 tensorflow==2.21.0
+tensorflowjs
 numpy
 google-cloud-storage
