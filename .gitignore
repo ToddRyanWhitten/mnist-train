@@ -1,2 +1,3 @@
-whitten-data-service-account.json
 .venv/
+keys/
+__pycache__/

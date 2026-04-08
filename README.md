@@ -30,6 +30,31 @@ export GOOGLE_APPLICATION_CREDENTIALS="/absolute/path/to/service-account.json"
 
 If this is not set correctly, training still runs and the model remains local.
 
+### Pass credentials at runtime (no key file in container)
+
+You can pass service-account JSON directly in environment variables so the script never needs a credentials file path.
+
+Option A (recommended): base64-encoded JSON
+
+```bash
+export GOOGLE_APPLICATION_CREDENTIALS_JSON_B64="$(base64 -w 0 ~/path/on/laptop/service-account.json)"
+python train.py
+unset GOOGLE_APPLICATION_CREDENTIALS_JSON_B64
+```
+
+Option B: raw JSON string
+
+```bash
+export GOOGLE_APPLICATION_CREDENTIALS_JSON="$(cat ~/path/on/laptop/service-account.json)"
+python train.py
+unset GOOGLE_APPLICATION_CREDENTIALS_JSON
+```
+
+The script checks auth in this order:
+1. `GOOGLE_APPLICATION_CREDENTIALS_JSON_B64`
+2. `GOOGLE_APPLICATION_CREDENTIALS_JSON`
+3. `GOOGLE_APPLICATION_CREDENTIALS` (file path)
+
 ## 4. Train
 
 ```bash

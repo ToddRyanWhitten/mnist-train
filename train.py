@@ -8,7 +8,6 @@ import os
 import tensorflow as tf
 from tensorflow import keras # type: ignore
 import numpy as np
-from google.cloud import storage
 
 # Use keras.layers to avoid Pylance import resolution issues
 layers = keras.layers
@@ -170,57 +169,8 @@ def evaluate_model(model, x_test, y_test):
     
     return test_accuracy
 
-def upload_to_gcs(local_file_path, accuracy, bucket_name='whitten-data-bucket', destination_folder='models/mnist'):
-    """
-    Uploads the trained model file to Google Cloud Storage with accuracy in the filename.
-    
-    Args:
-        local_file_path: Path to the local .h5 model file
-        accuracy: Test accuracy as a float (e.g., 0.9921)
-        bucket_name: Name of the GCS bucket (default: 'whitten-data-bucket')
-        destination_folder: Destination folder in the bucket (default: 'models/mnist')
-    
-    Returns:
-        bool: True if upload successful, False otherwise
-    
-    Note:
-        Requires GOOGLE_APPLICATION_CREDENTIALS environment variable to be set
-        with the path to a service account key JSON file.
-    """
-    try:
-        print("\n" + "=" * 60)
-        print("Uploading model to Google Cloud Storage...")
-        print("=" * 60)
-        
-        # Create filename with accuracy
-        accuracy_percent = accuracy * 100
-        filename = f"mnist_model_{accuracy_percent:.2f}.h5"
-        destination_blob_name = f"{destination_folder}/{filename}"
-        
-        # Initialize GCS client
-        client = storage.Client()
-        bucket = client.bucket(bucket_name)
-        blob = bucket.blob(destination_blob_name)
-        
-        # Upload the file
-        print(f"Uploading {local_file_path} to gs://{bucket_name}/{destination_blob_name}...")
-        blob.upload_from_filename(local_file_path)
-        
-        print(f"✓ Upload successful!")
-        print(f"  GCS Path: gs://{bucket_name}/{destination_blob_name}")
-        print(f"  Console URL: https://console.cloud.google.com/storage/browser/{bucket_name}/{destination_folder}")
-        print("=" * 60)
-        
-        return True
-        
-    except Exception as e:
-        print(f"\n✗ Error uploading to GCS: {str(e)}")
-        print(f"  Model is still saved locally at: {local_file_path}")
-        print(f"  Make sure GOOGLE_APPLICATION_CREDENTIALS is set correctly.")
-        print("=" * 60)
-        return False
-
 def main():
+
     """
     Main training pipeline.
     """
@@ -239,21 +189,20 @@ def main():
     # Train model
     history, model_path = train_model(model, x_train, y_train, x_test, y_test)
     
-    # Load the best saved model
-    print(f"\nLoading best model from {model_path}...")
+    # # Load the best saved model
+    # print(f"\nLoading best model from {model_path}...")
     best_model = keras.models.load_model(model_path)
-    
+
     # Evaluate on test set
     test_accuracy = evaluate_model(best_model, x_test, y_test)
-    
-    # Upload model to Google Cloud Storage
-    upload_to_gcs(model_path, test_accuracy)
-    
+
     print("\n" + "=" * 60)
     print("Training Complete!")
     print("=" * 60)
     print(f"Model saved locally to: {model_path}")
     print(f"Final test accuracy: {test_accuracy * 100:.2f}%")
+
+
     print("=" * 60)
 
 if __name__ == "__main__":
