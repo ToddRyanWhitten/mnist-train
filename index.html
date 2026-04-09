@@ -3,14 +3,14 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>MNIST Digit Recognizer</title>
+  <title>Handwritten Digit Recognizer</title>
   <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.22.0/dist/tf.min.js"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
       min-height: 100vh;
-      background: #0f0f13;
+      background: #0f0f13; 
       color: #e8e8f0;
       font-family: 'Segoe UI', system-ui, sans-serif;
       display: flex;
@@ -241,7 +241,7 @@
 
 <script>
 (function () {
-  const MODEL_URL    = 'models/mnist/v0.0.1/js/model.json';
+  const MODEL_URL    = 'https://storage.googleapis.com/whitten-public-data/models/mnist/v0.0.1/js/model.json';
   const CANVAS_SIZE  = 280;
   const MODEL_SIZE   = 28;
   const BRUSH_RADIUS = 14;
