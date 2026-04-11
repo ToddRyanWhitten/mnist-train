@@ -1,0 +1,7 @@
+[user]
+	name = Todd Ryan Whitten
+	email = todd.ryan.whitten@gmail.com
+[credential]
+	helper = "!f() { /home/whittendata/.vscode-server/bin/41dd792b5e652393e7787322889ed5fdc58bd75b/node /tmp/vscode-remote-containers-0214f729-9c03-470e-985e-4d195b4e94d1.js git-credential-helper $*; }; f"
+[safe]
+	directory = /home/whittendata
