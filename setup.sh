@@ -20,3 +20,4 @@ if [ -f "$REQUIREMENTS" ]; then
 fi
 
 echo "Environment ready"
+exit 0
