@@ -10,13 +10,10 @@ if [ ! -d "$VENV_DIR" ]; then
     python3 -m venv "$VENV_DIR"
 fi
 
-# Activate the virtual environment
-source "$VENV_DIR/bin/activate"
-
 # Install requirements if requirements.txt exists and packages are outdated/missing
 if [ -f "$REQUIREMENTS" ]; then
     echo "Checking requirements..."
     pip install -q -r "$REQUIREMENTS"
 fi
 
-echo "Environment ready. Virtual environment activated."
+echo "Environment ready"
