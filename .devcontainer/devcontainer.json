@@ -1,0 +1,10 @@
+{
+    "name": "mnist-train",
+    "dockerFile": "../Dockerfile",
+    "workspaceFolder": "/home/whittendata",
+    "mounts": [
+        "source=/home/whittendata/.config/mnist.json,target=/home/whittendata/keys/mnist.json,type=bind,consistency=readonly"
+    ],
+    "remoteUser": "whittendata",
+    "postCreateCommand": "bash setup.sh"
+}
