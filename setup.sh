@@ -10,9 +10,12 @@ if [ ! -d "$VENV_DIR" ]; then
     python3 -m venv "$VENV_DIR"
 fi
 
+# activate venv
+source "$VENV_DIR/bin/activate"
+
 # Install requirements if requirements.txt exists and packages are outdated/missing
 if [ -f "$REQUIREMENTS" ]; then
-    echo "Checking requirements..."
+    echo "Checking pip requirements..."
     pip install -q -r "$REQUIREMENTS"
 fi
 
