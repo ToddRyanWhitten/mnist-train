@@ -1,3 +1,12 @@
 .venv/
+.local/
+.vscode-server/
+.cache/
+.claude/
+.bash*
+.gitconfig/
+.dotnet/
+.*/
+.*
 keys/
 __pycache__/

@@ -10,7 +10,7 @@
 
     body {
       min-height: 100vh;
-      background: #0f0f13; 
+      background: #0f0f13;
       color: #e8e8f0;
       font-family: 'Segoe UI', system-ui, sans-serif;
       display: flex;
@@ -108,6 +108,7 @@
       width: 280px;
       display: flex;
       flex-direction: column;
+      align-items: center;
       gap: 1rem;
     }
 
@@ -117,6 +118,7 @@
       border: 1px solid #2a2a3a;
       padding: 1.2rem 1.5rem;
       text-align: center;
+      width: 100%;
     }
     .hero-label {
       font-size: 0.72rem;
@@ -141,59 +143,7 @@
       margin-top: 0.3rem;
     }
 
-    .bars-title {
-      font-size: 0.72rem;
-      color: #555570;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-    }
-
-    .bars {
-      display: flex;
-      flex-direction: column;
-      gap: 0.45rem;
-    }
-
-    .bar-row {
-      display: grid;
-      grid-template-columns: 1.2rem 1fr 3rem;
-      align-items: center;
-      gap: 0.6rem;
-    }
-
-    .bar-digit {
-      font-size: 0.82rem;
-      font-weight: 700;
-      color: #7070a0;
-      text-align: center;
-      transition: color 0.2s;
-    }
-    .bar-digit.active { color: #a0a8ff; }
-
-    .bar-track {
-      height: 10px;
-      background: #1e1e2a;
-      border-radius: 5px;
-      overflow: hidden;
-    }
-
-    .bar-fill {
-      height: 100%;
-      border-radius: 5px;
-      background: #3a3a5a;
-      transition: width 0.18s ease, background 0.2s;
-      width: 0%;
-    }
-    .bar-fill.active { background: #7080ff; }
-
-    .bar-pct {
-      font-size: 0.72rem;
-      color: #555570;
-      text-align: right;
-      font-variant-numeric: tabular-nums;
-      transition: color 0.2s;
-    }
-    .bar-pct.active { color: #9090d0; }
+    #radarChart { display: block; }
 
     #status {
       font-size: 0.78rem;
@@ -234,8 +184,7 @@
         <div id="predConfidence"></div>
       </div>
 
-      <div class="bars-title">Confidence by digit</div>
-      <div class="bars" id="barsContainer"></div>
+      <svg id="radarChart" width="280" height="280" viewBox="0 0 280 280"></svg>
     </div>
   </div>
 
@@ -252,41 +201,86 @@
   const statusEl      = document.getElementById('status');
   const predDigitEl   = document.getElementById('predDigit');
   const predConfEl    = document.getElementById('predConfidence');
-  const barsContainer = document.getElementById('barsContainer');
 
   const drawCtx    = drawCanvas.getContext('2d');
   const previewCtx = previewCanvas.getContext('2d');
 
-  const barFills  = [];
-  const barPcts   = [];
-  const barDigits = [];
+  // Radar chart
+  const SVG_NS   = 'http://www.w3.org/2000/svg';
+  const radarSvg = document.getElementById('radarChart');
+  const CX = 140, CY = 140, R = 95;
+  const DIGIT_COLORS = Array.from({length: 10}, (_, d) => `hsl(${d * 36}, 70%, 60%)`);
+
+  // Concentric guide circles
+  for (const frac of [0.25, 0.5, 0.75, 1.0]) {
+    const circle = document.createElementNS(SVG_NS, 'circle');
+    circle.setAttribute('cx', CX);
+    circle.setAttribute('cy', CY);
+    circle.setAttribute('r', R * frac);
+    circle.setAttribute('fill', 'none');
+    circle.setAttribute('stroke', '#1e1e2a');
+    circle.setAttribute('stroke-width', frac === 1.0 ? '1.5' : '1');
+    radarSvg.appendChild(circle);
+  }
+
+  const radarLines       = [];
+  const radarDigitLabels = [];
+  const radarConfLabels  = [];
+
   for (let d = 0; d < 10; d++) {
-    const row = document.createElement('div');
-    row.className = 'bar-row';
+    const angle = -Math.PI / 2 + d * (2 * Math.PI / 10);
+    const cos   = Math.cos(angle);
+    const sin   = Math.sin(angle);
 
-    const digitEl = document.createElement('div');
-    digitEl.className = 'bar-digit';
-    digitEl.textContent = d;
+    // Dim axis spoke
+    const axisLine = document.createElementNS(SVG_NS, 'line');
+    axisLine.setAttribute('x1', CX);
+    axisLine.setAttribute('y1', CY);
+    axisLine.setAttribute('x2', CX + R * cos);
+    axisLine.setAttribute('y2', CY + R * sin);
+    axisLine.setAttribute('stroke', '#1e1e2a');
+    axisLine.setAttribute('stroke-width', '1');
+    radarSvg.appendChild(axisLine);
 
-    const track = document.createElement('div');
-    track.className = 'bar-track';
+    // Colored confidence line (starts at zero length)
+    const line = document.createElementNS(SVG_NS, 'line');
+    line.setAttribute('x1', CX);
+    line.setAttribute('y1', CY);
+    line.setAttribute('x2', CX);
+    line.setAttribute('y2', CY);
+    line.setAttribute('stroke', DIGIT_COLORS[d]);
+    line.setAttribute('stroke-width', '3');
+    line.setAttribute('stroke-linecap', 'round');
+    line.setAttribute('opacity', '0.85');
+    radarSvg.appendChild(line);
+    radarLines.push(line);
 
-    const fill = document.createElement('div');
-    fill.className = 'bar-fill';
-    track.appendChild(fill);
+    // Digit label at rim
+    const dLabel = document.createElementNS(SVG_NS, 'text');
+    dLabel.setAttribute('x', CX + (R + 14) * cos);
+    dLabel.setAttribute('y', CY + (R + 14) * sin);
+    dLabel.setAttribute('text-anchor', 'middle');
+    dLabel.setAttribute('dominant-baseline', 'middle');
+    dLabel.setAttribute('fill', '#7070a0');
+    dLabel.setAttribute('font-size', '13');
+    dLabel.setAttribute('font-weight', '700');
+    dLabel.setAttribute('font-family', 'Segoe UI, system-ui, sans-serif');
+    dLabel.textContent = d;
+    radarSvg.appendChild(dLabel);
+    radarDigitLabels.push(dLabel);
 
-    const pct = document.createElement('div');
-    pct.className = 'bar-pct';
-    pct.textContent = '0%';
-
-    row.appendChild(digitEl);
-    row.appendChild(track);
-    row.appendChild(pct);
-    barsContainer.appendChild(row);
-
-    barFills.push(fill);
-    barPcts.push(pct);
-    barDigits.push(digitEl);
+    // Confidence % label just beyond digit label
+    const cLabel = document.createElementNS(SVG_NS, 'text');
+    cLabel.setAttribute('x', CX + (R + 28) * cos);
+    cLabel.setAttribute('y', CY + (R + 28) * sin);
+    cLabel.setAttribute('text-anchor', 'middle');
+    cLabel.setAttribute('dominant-baseline', 'middle');
+    cLabel.setAttribute('fill', '#555570');
+    cLabel.setAttribute('font-size', '9');
+    cLabel.setAttribute('font-family', 'Segoe UI, system-ui, sans-serif');
+    cLabel.textContent = '';
+    radarSvg.appendChild(cLabel);
+    radarConfLabels.push(cLabel);
   }
 
   let isDrawing  = false;
@@ -306,11 +300,13 @@
     predDigitEl.textContent = '—';
     predConfEl.textContent  = '';
     for (let d = 0; d < 10; d++) {
-      barFills[d].style.width = '0%';
-      barFills[d].classList.remove('active');
-      barPcts[d].textContent  = '0%';
-      barPcts[d].classList.remove('active');
-      barDigits[d].classList.remove('active');
+      radarLines[d].setAttribute('x2', CX);
+      radarLines[d].setAttribute('y2', CY);
+      radarLines[d].setAttribute('stroke-width', '3');
+      radarLines[d].setAttribute('opacity', '0.85');
+      radarDigitLabels[d].setAttribute('fill', '#7070a0');
+      radarDigitLabels[d].setAttribute('font-size', '13');
+      radarConfLabels[d].textContent = '';
     }
   }
 
@@ -485,13 +481,21 @@
       predConfEl.textContent  = (bestProb * 100).toFixed(1) + '% confidence';
 
       for (let d = 0; d < 10; d++) {
-        const pct   = (probs[d] * 100).toFixed(1);
+        const conf  = probs[d];
         const isTop = (d === bestDigit);
-        barFills[d].style.width = pct + '%';
-        barFills[d].classList.toggle('active', isTop);
-        barPcts[d].textContent = pct + '%';
-        barPcts[d].classList.toggle('active', isTop);
-        barDigits[d].classList.toggle('active', isTop);
+        const angle = -Math.PI / 2 + d * (2 * Math.PI / 10);
+        const lineR = conf * R;
+
+        radarLines[d].setAttribute('x2', CX + lineR * Math.cos(angle));
+        radarLines[d].setAttribute('y2', CY + lineR * Math.sin(angle));
+        radarLines[d].setAttribute('stroke-width', isTop ? '5' : '3');
+        radarLines[d].setAttribute('opacity', isTop ? '1' : '0.65');
+
+        radarDigitLabels[d].setAttribute('fill', isTop ? DIGIT_COLORS[d] : '#7070a0');
+        radarDigitLabels[d].setAttribute('font-size', isTop ? '15' : '13');
+
+        radarConfLabels[d].textContent = (conf * 100).toFixed(1) + '%';
+        radarConfLabels[d].setAttribute('fill', isTop ? DIGIT_COLORS[d] : '#555570');
       }
     } catch (err) {
       console.error('Prediction error:', err);
