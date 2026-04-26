@@ -1,74 +1,58 @@
-# MNIST Training (venv)
+# MNIST Training
 
 This project trains a high-accuracy CNN on MNIST and saves the best model to `model/mnist_model.h5`.
 
-## 1. Create and activate a virtual environment
+## Development container
 
-From the project root:
+The recommended way to develop and run this project is with the included Dev Container. When the container starts, `devcontainer.json` runs `setup.sh` via `postCreateCommand`, which automatically creates the `.venv` virtual environment and installs all dependencies from `requirements.txt`. No manual setup is needed.
 
-```bash
-python3 -m venv .venv
-source .venv/bin/activate
-```
+### Prerequisites
 
-If activation worked, your shell prompt should show `(.venv)`.
+- [Docker](https://docs.docker.com/get-docker/)
+- VS Code with the [Dev Containers extension](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers)
 
-## 2. Install dependencies
+### Getting started
 
-```bash
-python -m pip install --upgrade pip
-pip install -r requirements.txt
-```
+1. Open the repository in VS Code.
+2. When prompted, click **Reopen in Container** (or run **Dev Containers: Reopen in Container** from the command palette).
+3. VS Code builds the image from `Dockerfile`, starts the container, and runs `setup.sh` — the environment is ready when the terminal prompt appears.
 
-## 3. (Optional) Configure Google Cloud credentials
+The container is built from `tensorflow/tensorflow:2.21.0` and includes `tensorflowjs`. Your GCS credentials file is bind-mounted read-only from `~/.config/mnist.json` on the host into `keys/mnist.json` inside the container.
 
-If you want the trained model uploaded to GCS, you need a service account key file. If this is not set, training still runs and the model remains local.
-
-### Create a service account key in GCP
-
-1. Go to the [Google Cloud Console](https://console.cloud.google.com/) and select your project.
-2. Navigate to **IAM & Admin > Service Accounts**.
-3. Click **Create Service Account**, give it a name, and click **Done**.
-4. Click the service account you just created, go to the **Keys** tab, and click **Add Key > Create new key**.
-5. Choose **JSON** and click **Create** — the key file downloads automatically.
-6. Grant the service account the **Storage Object Admin** role (or a more restrictive role scoped to your bucket) via **IAM & Admin > IAM**.
-
-### Set the environment variable
-
-Point `GOOGLE_CLOUD_CREDENTIALS` at the downloaded key file:
-
-```bash
-export GOOGLE_CLOUD_CREDENTIALS="/absolute/path/to/service-account.json"
-```
-
-## 4. Train
+## Train
 
 ```bash
 python train.py
 ```
 
-## 5. Run the live demo
+## (Optional) Google Cloud credentials
+
+If you want the trained model uploaded to GCS, ensure your service account key is in place at `~/.config/mnist.json` on the host before starting the container (it is mounted automatically). If the key is absent, training still runs and the model remains local.
+
+To create a service account key:
+
+1. Go to the [Google Cloud Console](https://console.cloud.google.com/) and select your project.
+2. Navigate to **IAM & Admin > Service Accounts**.
+3. Click **Create Service Account**, give it a name, and click **Done**.
+4. Click the account, go to the **Keys** tab, and click **Add Key > Create new key**.
+5. Choose **JSON** and click **Create** — the key file downloads automatically.
+6. Grant the service account the **Storage Object Admin** role via **IAM & Admin > IAM**.
+7. Save the key to `~/.config/mnist.json` on your host.
+
+## Run the live demo
 
 https://toddryanwhitten.github.io/mnist-train/
 
-OR
-
-Start a local HTTP server from the project root:
+OR start a local HTTP server from the project root:
 
 ```bash
 python -m http.server 8080
 ```
 
-Then open [index.html](http://localhost:8080/index.html) in your browser to interact with the trained model via the live demo page.
-
-## 6. Deactivate when done
-
-```bash
-deactivate
-```
+Then open [http://localhost:8080/index.html](http://localhost:8080/index.html) in your browser.
 
 ## Notes
 
 - Model artifact path: `model/mnist_model.h5`
 - Existing `model/` directory is reused if present.
-- For VS Code, select the interpreter from `.venv/bin/python`.
+- `setup.sh` is idempotent — it is safe to re-run manually if needed.
